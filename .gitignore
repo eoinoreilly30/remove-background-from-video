@@ -1,0 +1,15 @@
+__pycache__
+.cog/
+venv
+
+input_frames/
+output_frames/
+
+*.jpg
+*.png
+*.mp4
+*.mov
+*.webm
+*.gif
+*.webp
+*.jpeg
