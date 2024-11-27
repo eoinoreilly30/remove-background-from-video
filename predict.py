@@ -3,10 +3,11 @@
 
 from cog import BasePredictor, Input, Path
 import logging
-from rembg import remove, new_session
 import os
 import subprocess
 import time
+
+from remove_background import remove_background_from_frames
 
 
 logging.basicConfig(
@@ -18,32 +19,6 @@ output_file = "output.webm"
 frame_rate = 30
 input_frames_dir = "./input_frames"
 output_frames_dir = "./output_frames"
-
-session = new_session("u2netp")
-
-def process_frame(frame):
-    input_frame_path = f'{input_frames_dir}/{frame}'
-    output_frame_path = f'{output_frames_dir}/{frame}'
-        
-    with open(input_frame_path, 'rb') as i:
-        with open(output_frame_path, 'wb') as o:
-            logging.info(f"Reading input file {input_frame_path}")
-            input_data = i.read()
-            
-            logging.info(f"Starting remove background process for {input_frame_path}")
-            output = remove(input_data, session=session, bgcolor=(255, 255, 255, 0))
-
-            logging.info(f"Writing output file {output_frame_path}")
-            o.write(output)
-    return frame
-
-
-def remove_background_from_frames():
-    frames = os.listdir(input_frames_dir)
-    logging.info(f"Processing {len(frames)} frames sequentially")
-
-    for frame in frames:
-        process_frame(frame)
 
 
 class Predictor(BasePredictor):
@@ -99,7 +74,7 @@ class Predictor(BasePredictor):
                       f'{input_frames_dir}/{frame_name_format}']
         subprocess.run(ffmpeg_cmd, check=True)
         
-        # Process frames sequentially
+        # Process frames in parallel
         remove_background_from_frames()
 
         # Reassemble video from frames

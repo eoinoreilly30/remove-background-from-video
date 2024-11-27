@@ -5,7 +5,7 @@ image: "r8.im/eoinoreilly30/remove-background-from-video"
 
 build:
   # set to true if your model requires a GPU
-  gpu: true
+  gpu: false
 
   # a list of ubuntu apt packages to install
   system_packages:
@@ -16,13 +16,12 @@ build:
 
   # a list of packages in the format <package-name>==<version>
   python_packages:
-    - "rembg[gpu]==2.0.60"
-    # - "pathos==0.3.3"
+    - "rembg[cpu]==2.0.60"
 
   # commands run after the environment is setup
   run:
     - "mkdir -p ~/.u2net"
-    - "curl -L -o ~/.u2net/u2net_human_seg.onnx https://github.com/danielgatis/rembg/releases/download/v0.0.0/u2net_human_seg.onnx"
+    # - "curl -L -o ~/.u2net/u2net_human_seg.onnx https://github.com/danielgatis/rembg/releases/download/v0.0.0/u2net_human_seg.onnx"
     - "curl -L -o ~/.u2net/u2netp.onnx https://github.com/danielgatis/rembg/releases/download/v0.0.0/u2netp.onnx"
 
 # predict.py defines how predictions are run on your model
