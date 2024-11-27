@@ -6,7 +6,7 @@ import logging
 from rembg import remove, new_session
 import os
 import subprocess
-from pathos.multiprocessing import ProcessingPool as Pool, cpu_count
+import time
 
 
 logging.basicConfig(
@@ -19,11 +19,9 @@ frame_rate = 30
 input_frames_dir = "./input_frames"
 output_frames_dir = "./output_frames"
 
+session = new_session("u2netp")
 
 def process_frame(frame):
-    # TODO: figure out how to avoid creating a new session for each frame
-    session = new_session("u2net_human_seg")
-
     input_frame_path = f'{input_frames_dir}/{frame}'
     output_frame_path = f'{output_frames_dir}/{frame}'
         
@@ -33,7 +31,7 @@ def process_frame(frame):
             input_data = i.read()
             
             logging.info(f"Starting remove background process for {input_frame_path}")
-            output = remove(input_data, session=session, bgcolor=(255, 255, 255, 255))
+            output = remove(input_data, session=session, bgcolor=(255, 255, 255, 0))
 
             logging.info(f"Writing output file {output_frame_path}")
             o.write(output)
@@ -41,14 +39,11 @@ def process_frame(frame):
 
 
 def remove_background_from_frames():
-    num_workers = cpu_count()
-    logging.info(f"Using {num_workers} workers for parallel processing")
-
     frames = os.listdir(input_frames_dir)
-    logging.info(f"Processing {len(frames)} frames using {num_workers} workers")
+    logging.info(f"Processing {len(frames)} frames sequentially")
 
-    with Pool(num_workers) as pool:
-        pool.map(process_frame, frames)
+    for frame in frames:
+        process_frame(frame)
 
 
 class Predictor(BasePredictor):
@@ -69,6 +64,8 @@ class Predictor(BasePredictor):
         input_video: Path = Input(description="Input video to process"),
     ) -> Path:
         """Run a single prediction on the model"""
+
+        start_time = time.time()
 
         # Create directories
         logging.info("Creating directories")
@@ -102,7 +99,7 @@ class Predictor(BasePredictor):
                       f'{input_frames_dir}/{frame_name_format}']
         subprocess.run(ffmpeg_cmd, check=True)
         
-        # Process frames in parallel
+        # Process frames sequentially
         remove_background_from_frames()
 
         # Reassemble video from frames
@@ -121,5 +118,5 @@ class Predictor(BasePredictor):
         
         subprocess.run(ffmpeg_cmd, check=True)
 
-        logging.info("Remove background process finished successfully")
+        logging.info(f"Remove background process finished successfully in {time.time() - start_time} seconds")
         return Path(output_file)
